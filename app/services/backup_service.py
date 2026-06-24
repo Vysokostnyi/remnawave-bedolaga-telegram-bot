@@ -1945,14 +1945,8 @@ class BackupService:
             return False
 
     async def start_auto_backup(self):
-        # Дожидаемся отмены старой таски, чтобы не было двух циклов параллельно
-        # во время рестарта scheduler'а после изменения BACKUP_TIME из кабинета.
         if self._auto_backup_task and not self._auto_backup_task.done():
             self._auto_backup_task.cancel()
-            import contextlib
-
-            with contextlib.suppress(asyncio.CancelledError):
-                await self._auto_backup_task
 
         if self._settings.auto_backup_enabled:
             next_run = self._calculate_next_backup_datetime()
@@ -1967,10 +1961,6 @@ class BackupService:
     async def stop_auto_backup(self):
         if self._auto_backup_task and not self._auto_backup_task.done():
             self._auto_backup_task.cancel()
-            import contextlib
-
-            with contextlib.suppress(asyncio.CancelledError):
-                await self._auto_backup_task
             logger.info('ℹ️ Автобекапы остановлены')
 
     async def _auto_backup_loop(self, next_run: datetime | None = None):
